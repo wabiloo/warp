@@ -343,7 +343,7 @@ impl ContextChipKind {
             )),
             Self::Tenant if !FeatureFlag::TenantChip.is_enabled() => None,
             Self::Tenant => Some(ContextChip::shell_builtin(
-                "Tenant",
+                "bic Tenant",
                 builtins::tenant_label(),
                 None,
                 RefreshConfig::OnDemandOnly,
