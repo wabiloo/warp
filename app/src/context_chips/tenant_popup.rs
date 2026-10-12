@@ -7,7 +7,6 @@ use warpui::elements::{
     CornerRadius, CrossAxisAlignment, Dismiss, DropShadow, Flex, ParentElement, Radius,
     ScrollbarWidth, Text,
 };
-use warpui::fonts::Properties;
 use warpui::keymap::FixedBinding;
 use warpui::{
     AppContext, Element, Entity, TypedActionView, View, ViewContext, ViewHandle, SingletonEntity,
