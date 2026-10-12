@@ -2063,7 +2063,7 @@ impl DisplayChip {
                 super::BIC_ORANGE
             };
             let hovered = state.is_hovered() && !popup_open;
-            let mut config = UdiChipConfig::new_with_icon(Icon::User, color, chip_text.clone())
+            let mut config = UdiChipConfig::new_with_icon(Icon::Bic, color, chip_text.clone())
                 .with_hovered(hovered);
             if is_in_agent_view {
                 config = config.for_agent_view();

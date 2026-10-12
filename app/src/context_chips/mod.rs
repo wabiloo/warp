@@ -561,7 +561,7 @@ impl ContextChipKind {
             Self::GitDiffStats | Self::SvnDirtyItems => Some(Icon::File),
             Self::GithubPullRequest => Some(Icon::Github),
             Self::KubernetesContext => Some(Icon::Globe),
-            Self::Tenant => Some(Icon::User),
+            Self::Tenant => Some(Icon::Bic),
             Self::AgentPlanAndTodoList => Some(Icon::CheckSkinny),
             Self::Custom { .. } => None,
         }

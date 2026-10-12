@@ -11,6 +11,7 @@ pub const ICON_DIMENSIONS: f32 = 24.;
 pub enum Icon {
     File,
     NodeJS,
+    Bic,
     AtSign,
     Menu,
     Plus,
@@ -587,6 +588,7 @@ impl From<Icon> for &'static str {
             Icon::Image => "bundled/svg/image-01.svg",
             Icon::File => "bundled/svg/file.svg",
             Icon::NodeJS => "bundled/svg/nodejs-logo.svg",
+            Icon::Bic => "bundled/svg/bic-logo.svg",
             Icon::FastForward => "bundled/svg/fast-forward.svg",
             Icon::FastForwardFilled => "bundled/svg/fast-forward-filled.svg",
             Icon::ContextWindowTwentyPct => "bundled/svg/context-window-20-pct.svg",
