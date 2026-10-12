@@ -161,7 +161,12 @@ impl ChipResult {
 }
 
 /// The broadpeak.io brand orange, sampled from the bic logo.
-const BIC_ORANGE: ColorU = ColorU::new(255, 149, 0, 255);
+const BIC_ORANGE: ColorU = ColorU {
+    r: 255,
+    g: 149,
+    b: 0,
+    a: 255,
+};
 
 #[derive(
     Serialize,
