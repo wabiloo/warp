@@ -9,6 +9,7 @@ pub mod display_menu;
 pub(crate) mod git_branch_on_click;
 pub(crate) mod logging;
 pub mod node_version_popup;
+pub mod tenant_popup;
 pub mod prompt;
 pub mod prompt_snapshot;
 pub mod prompt_type;
@@ -193,6 +194,7 @@ pub enum ContextChipKind {
     GitDiffStats,
     GithubPullRequest,
     KubernetesContext,
+    Tenant,
     SvnBranch,
     SvnDirtyItems,
     // This is for backwards compatibility with the old "RemoteLogin" chip.
@@ -339,6 +341,13 @@ impl ContextChipKind {
                 None,
                 RefreshConfig::OnDemandOnly,
             )),
+            Self::Tenant if !FeatureFlag::TenantChip.is_enabled() => None,
+            Self::Tenant => Some(ContextChip::shell_builtin(
+                "Tenant",
+                builtins::tenant_label(),
+                None,
+                RefreshConfig::OnDemandOnly,
+            )),
             Self::SvnBranch => Some(ContextChip::shell_builtin(
                 "Svn Branch",
                 builtins::svn_branch_context(),
@@ -417,6 +426,7 @@ impl ContextChipKind {
             Self::Time24 => ChipValue::Text("15:48".to_string()),
             Self::Custom { .. } => ChipValue::Text("custom chip".to_string()),
             Self::KubernetesContext => ChipValue::Text("kube-context".to_string()),
+            Self::Tenant => ChipValue::Text("my-tenant".to_string()),
             Self::SvnBranch => ChipValue::Text("svn-feature-branch".to_string()),
             Self::SvnDirtyItems => ChipValue::Text("3".to_string()),
             Self::Ssh => ChipValue::Text("alice@127.0.0.1".to_string()),
@@ -450,6 +460,7 @@ impl ContextChipKind {
             Self::Time12 => prompt_colors.input_prompt_time,
             Self::Time24 => prompt_colors.input_prompt_time,
             Self::KubernetesContext => prompt_colors.input_prompt_kubernetes,
+            Self::Tenant => prompt_colors.input_prompt_virtual_env,
             Self::SvnBranch => prompt_colors.input_prompt_branch,
             Self::SvnDirtyItems => prompt_colors.input_prompt_svn,
             Self::Ssh => prompt_colors.input_prompt_ssh,
@@ -547,6 +558,7 @@ impl ContextChipKind {
             Self::GitDiffStats | Self::SvnDirtyItems => Some(Icon::File),
             Self::GithubPullRequest => Some(Icon::Github),
             Self::KubernetesContext => Some(Icon::Globe),
+            Self::Tenant => Some(Icon::User),
             Self::AgentPlanAndTodoList => Some(Icon::CheckSkinny),
             Self::Custom { .. } => None,
         }
@@ -585,6 +597,9 @@ pub fn available_chips() -> Vec<ContextChipKind> {
         ContextChipKind::SvnBranch,
         ContextChipKind::SvnDirtyItems,
     ]);
+    if FeatureFlag::TenantChip.is_enabled() {
+        chips.push(ContextChipKind::Tenant);
+    }
     chips
 }
 

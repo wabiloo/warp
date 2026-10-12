@@ -44,6 +44,7 @@ use crate::context_chips::git_branch_on_click::{
     GitBranchOnClickValue, is_plausible_new_branch_name,
 };
 use crate::context_chips::node_version_popup::{NodeVersionPopupEvent, NodeVersionPopupView};
+use crate::context_chips::tenant_popup::{TenantPopupEvent, TenantPopupView};
 use crate::context_chips::spacing;
 use crate::settings::{AISettings, AISettingsChangedEvent};
 use crate::settings_view::keybindings::{KeybindingChangedEvent, KeybindingChangedNotifier};
@@ -629,6 +630,10 @@ pub enum DisplayChipKind {
         popup_open: bool,
         popup: ViewHandle<crate::context_chips::node_version_popup::NodeVersionPopupView>,
     },
+    Tenant {
+        popup_open: bool,
+        popup: ViewHandle<TenantPopupView>,
+    },
     AgentPlanAndTodoList {
         plan_and_todo_list: ViewHandle<PlanAndTodoListView>,
     },
@@ -651,7 +656,8 @@ impl DisplayChipKind {
     pub fn has_open_menu(&self) -> bool {
         match self {
             DisplayChipKind::WorkingDirectory { menu_open, .. } => *menu_open,
-            DisplayChipKind::NodeVersion { popup_open, .. } => *popup_open,
+            DisplayChipKind::NodeVersion { popup_open, .. }
+            | DisplayChipKind::Tenant { popup_open, .. } => *popup_open,
             DisplayChipKind::GitBranch { menu_open, .. }
             | DisplayChipKind::GitBranchStatus { menu_open, .. } => *menu_open,
             DisplayChipKind::GithubPullRequest
@@ -1101,6 +1107,32 @@ impl DisplayChip {
                     popup: popup_view,
                 }
             }
+            ContextChipKind::Tenant => {
+                let current_tenant = chip_result.value.as_ref().map(|v| v.to_string());
+                let popup_view =
+                    ctx.add_typed_action_view(move |ctx| TenantPopupView::new(current_tenant, ctx));
+
+                ctx.subscribe_to_view(&popup_view, |me, _, event, ctx| match event {
+                    TenantPopupEvent::Close => {
+                        me.close_tenant_popup(ctx);
+                        ctx.focus_self();
+                    }
+                    TenantPopupEvent::SelectTenant { label } => {
+                        ctx.emit(PromptDisplayChipEvent::TryExecuteCommand(
+                            PromptChipShellCommand::SwitchTenant {
+                                label: label.clone(),
+                            },
+                        ));
+                        me.close_tenant_popup(ctx);
+                        ctx.focus_self();
+                    }
+                });
+
+                DisplayChipKind::Tenant {
+                    popup_open: false,
+                    popup: popup_view,
+                }
+            }
             _ => DisplayChipKind::Text,
         };
 
@@ -1193,6 +1225,13 @@ impl DisplayChip {
         }
     }
 
+    fn close_tenant_popup(&mut self, ctx: &mut ViewContext<'_, DisplayChip>) {
+        if let DisplayChipKind::Tenant { popup_open, .. } = &mut self.display_chip_kind {
+            *popup_open = false;
+            ctx.notify();
+        }
+    }
+
     pub fn text(&self) -> &str {
         &self.text
     }
@@ -1266,6 +1305,7 @@ impl DisplayChip {
             | DisplayChipKind::VirtualEnvironment
             | DisplayChipKind::CondaEnvironment
             | DisplayChipKind::NodeVersion { .. }
+            | DisplayChipKind::Tenant { .. }
             | DisplayChipKind::AgentPlanAndTodoList { .. }
             | DisplayChipKind::GithubPullRequest => {}
         }
@@ -2006,6 +2046,57 @@ impl DisplayChip {
         stack.finish()
     }
 
+    fn tenant_chip(
+        &self,
+        popup: &ViewHandle<TenantPopupView>,
+        popup_open: bool,
+        app: &AppContext,
+    ) -> Box<dyn Element> {
+        let appearance = Appearance::as_ref(app);
+
+        let chip_text = self.text.clone();
+        let is_in_agent_view = self.is_in_agent_view;
+        let hoverable = Hoverable::new(self.mouse_state.clone(), move |state| {
+            let color = if is_in_agent_view {
+                agent_view_chip_color(appearance)
+            } else {
+                appearance.theme().ansi_fg_green()
+            };
+            let hovered = state.is_hovered() && !popup_open;
+            let mut config = UdiChipConfig::new_with_icon(Icon::User, color, chip_text.clone())
+                .with_hovered(hovered);
+            if is_in_agent_view {
+                config = config.for_agent_view();
+            }
+            render_udi_chip(config, appearance)
+        })
+        .on_click(|ctx, _app, _pos| {
+            ctx.dispatch_typed_action(DisplayChipAction::ToggleMenu);
+        })
+        .with_cursor(Cursor::PointingHand)
+        .finish();
+
+        let mut stack = Stack::new().with_child(hoverable);
+        if popup_open {
+            let positioning = self.menu_positioning_provider.menu_position(app);
+            let (parent_anchor, child_anchor) = Self::positioning_to_anchors(positioning);
+            let offset = match positioning {
+                MenuPositioning::BelowInputBox => vec2f(0., 4.),
+                MenuPositioning::AboveInputBox => vec2f(0., -4.),
+            };
+            stack.add_positioned_overlay_child(
+                ChildView::new(popup).finish(),
+                OffsetPositioning::offset_from_parent(
+                    offset,
+                    ParentOffsetBounds::WindowByPosition,
+                    parent_anchor,
+                    child_anchor,
+                ),
+            );
+        }
+        stack.finish()
+    }
+
     fn render_chip(&self, app: &AppContext) -> Option<Box<dyn Element>> {
         let appearance = Appearance::as_ref(app);
         let font_family = if self.is_in_agent_view || !FeatureFlag::AgentView.is_enabled() {
@@ -2027,6 +2118,9 @@ impl DisplayChip {
             DisplayChipKind::VirtualEnvironment => Some(self.virtual_environment_chip(app)),
             DisplayChipKind::NodeVersion { popup, popup_open } => {
                 Some(self.node_version_chip(popup, *popup_open, app))
+            }
+            DisplayChipKind::Tenant { popup, popup_open } => {
+                Some(self.tenant_chip(popup, *popup_open, app))
             }
             DisplayChipKind::CondaEnvironment => Some(self.conda_environment_chip(app)),
             DisplayChipKind::AgentPlanAndTodoList { plan_and_todo_list } => {
@@ -2104,6 +2198,9 @@ pub enum PromptChipShellCommand {
         version: String,
     },
     NvmInstallLatestNode,
+    SwitchTenant {
+        label: String,
+    },
     Echo {
         /// The message to echo.
         ///
@@ -2163,7 +2260,8 @@ impl TypedActionView for DisplayChip {
                 | DisplayChipKind::Text
                 | DisplayChipKind::GithubPullRequest
                 | DisplayChipKind::GitDiffStats { .. } => {}
-                DisplayChipKind::NodeVersion { popup_open, .. } => {
+                DisplayChipKind::NodeVersion { popup_open, .. }
+                | DisplayChipKind::Tenant { popup_open, .. } => {
                     *popup_open = false;
                     ctx.notify();
                 }
@@ -2216,6 +2314,19 @@ impl TypedActionView for DisplayChip {
                         ctx.notify();
                     }
                     DisplayChipKind::NodeVersion { popup, popup_open } => {
+                        *popup_open = !*popup_open;
+                        let is_open = *popup_open;
+                        if is_open {
+                            popup.update(ctx, |popup_view, popup_ctx| {
+                                popup_view.focus_content(popup_ctx);
+                            });
+                        } else {
+                            ctx.focus_self();
+                        }
+                        ctx.emit(PromptDisplayChipEvent::ToggleMenu { open: is_open });
+                        ctx.notify();
+                    }
+                    DisplayChipKind::Tenant { popup, popup_open } => {
                         *popup_open = !*popup_open;
                         let is_open = *popup_open;
                         if is_open {

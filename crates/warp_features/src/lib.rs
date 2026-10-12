@@ -396,6 +396,10 @@ pub enum FeatureFlag {
     /// Enables the prompt chip that displays the GitHub PR for the current branch.
     GithubPrPromptChip,
 
+    /// A prompt chip that shows the broadpeak.io tenant from the `.tenant` file in the working
+    /// directory, and lets the user switch between the tenants configured in `~/.bpkio/tenants`.
+    TenantChip,
+
     /// A button on the homepage for easily creating new projects.
     CreateProjectFlow,
 
@@ -1025,6 +1029,7 @@ pub const LOCAL_FLAGS: &[FeatureFlag] = &[
 /// Features enabled for the development team.  The expectation is that, over
 /// time, these will move on to PREVIEW_FLAGS before being launched.
 pub const DOGFOOD_FLAGS: &[FeatureFlag] = &[
+    FeatureFlag::TenantChip,
     FeatureFlag::LogExpensiveFramesInSentry,
     FeatureFlag::ToggleBootstrapBlock,
     FeatureFlag::CreatingSharedSessions,

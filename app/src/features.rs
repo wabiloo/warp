@@ -261,6 +261,8 @@ fn enabled_features() -> HashSet<FeatureFlag> {
         FeatureFlag::CodeModeChip,
         #[cfg(feature = "github_pr_prompt_chip")]
         FeatureFlag::GithubPrPromptChip,
+        #[cfg(feature = "tenant_chip")]
+        FeatureFlag::TenantChip,
         #[cfg(feature = "create_project_flow")]
         FeatureFlag::CreateProjectFlow,
         #[cfg(feature = "vim_code_editor")]

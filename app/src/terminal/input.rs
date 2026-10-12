@@ -992,6 +992,17 @@ fn render_prompt_chip_shell_command(
             format!("nvm use {}", shell_quote_arg(version, shell_type))
         }
         PromptChipShellCommand::NvmInstallLatestNode => "nvm install node".to_string(),
+        PromptChipShellCommand::SwitchTenant { label } => {
+            let label = shell_quote_arg(label, shell_type);
+            match shell_type {
+                ShellType::PowerShell => {
+                    format!("Set-Content -NoNewline -Path .tenant -Value {label}")
+                }
+                ShellType::Bash | ShellType::Zsh | ShellType::Fish => {
+                    format!("printf %s {label} > .tenant")
+                }
+            }
+        }
         PromptChipShellCommand::Echo { message } => {
             format!("echo {}", shell_quote_arg(message, shell_type))
         }

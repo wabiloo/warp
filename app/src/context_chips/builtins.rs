@@ -253,6 +253,20 @@ pub fn kubernetes_current_context() -> ShellCommandGenerator {
     )
 }
 
+/// Generator function that shows the tenant pinned to the working directory by a `.tenant` file.
+pub fn tenant_label() -> ShellCommandGenerator {
+    const SH_COMMAND: &str = "test -f .tenant && head -n 1 .tenant";
+    const PWSH_COMMAND: &str = "if (Test-Path .tenant -PathType Leaf) \
+        { Get-Content .tenant -TotalCount 1 } else { throw }";
+    let command = ShellCommand::shell_specific([
+        (ShellType::Bash, SH_COMMAND.to_string()),
+        (ShellType::Zsh, SH_COMMAND.to_string()),
+        (ShellType::Fish, SH_COMMAND.to_string()),
+        (ShellType::PowerShell, PWSH_COMMAND.to_string()),
+    ]);
+    ShellCommandGenerator::new(command, None)
+}
+
 /// Generator function that shows the current svn "branch".
 /// Since svn uses directories for different branches and tags,
 /// we take the latest directory of the working copy as the branch/tag name.
