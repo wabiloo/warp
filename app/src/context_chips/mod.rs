@@ -9,12 +9,12 @@ pub mod display_menu;
 pub(crate) mod git_branch_on_click;
 pub(crate) mod logging;
 pub mod node_version_popup;
-pub mod tenant_popup;
 pub mod prompt;
 pub mod prompt_snapshot;
 pub mod prompt_type;
 pub mod renderer;
 pub mod spacing;
+pub mod tenant_popup;
 
 use std::collections::HashMap;
 use std::time::Duration;
@@ -159,6 +159,9 @@ impl ChipResult {
         &self.on_click_values
     }
 }
+
+/// The broadpeak.io brand orange, sampled from the bic logo.
+const BIC_ORANGE: ColorU = ColorU::new(255, 149, 0, 255);
 
 #[derive(
     Serialize,
@@ -460,7 +463,7 @@ impl ContextChipKind {
             Self::Time12 => prompt_colors.input_prompt_time,
             Self::Time24 => prompt_colors.input_prompt_time,
             Self::KubernetesContext => prompt_colors.input_prompt_kubernetes,
-            Self::Tenant => prompt_colors.input_prompt_virtual_env,
+            Self::Tenant => BIC_ORANGE,
             Self::SvnBranch => prompt_colors.input_prompt_branch,
             Self::SvnDirtyItems => prompt_colors.input_prompt_svn,
             Self::Ssh => prompt_colors.input_prompt_ssh,

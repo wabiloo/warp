@@ -44,8 +44,8 @@ use crate::context_chips::git_branch_on_click::{
     GitBranchOnClickValue, is_plausible_new_branch_name,
 };
 use crate::context_chips::node_version_popup::{NodeVersionPopupEvent, NodeVersionPopupView};
-use crate::context_chips::tenant_popup::{TenantPopupEvent, TenantPopupView};
 use crate::context_chips::spacing;
+use crate::context_chips::tenant_popup::{TenantPopupEvent, TenantPopupView};
 use crate::settings::{AISettings, AISettingsChangedEvent};
 use crate::settings_view::keybindings::{KeybindingChangedEvent, KeybindingChangedNotifier};
 use crate::terminal::cli_agent_sessions::CLIAgentSessionsModel;
@@ -2060,7 +2060,7 @@ impl DisplayChip {
             let color = if is_in_agent_view {
                 agent_view_chip_color(appearance)
             } else {
-                appearance.theme().ansi_fg_green()
+                super::BIC_ORANGE
             };
             let hovered = state.is_hovered() && !popup_open;
             let mut config = UdiChipConfig::new_with_icon(Icon::User, color, chip_text.clone())

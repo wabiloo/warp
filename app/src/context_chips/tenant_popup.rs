@@ -9,7 +9,7 @@ use warpui::elements::{
 };
 use warpui::keymap::FixedBinding;
 use warpui::{
-    AppContext, Element, Entity, TypedActionView, View, ViewContext, ViewHandle, SingletonEntity,
+    AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
 };
 
 use crate::menu::{self, Event as MenuEvent, Menu, MenuItemFields};
